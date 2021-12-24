@@ -11,12 +11,13 @@ https://www.vmware.com/in/products/workstation-pro/workstation-pro-evaluation.ht
 
 Prerequisites
 
-    2 or more Linux servers running Ubuntu 18.04
+    2 or more Linux servers running Ubuntu 1ubuntu-20.04.3
     Access to a user account on each system with sudo or root privileges
     The apt package manager, included by default
     Command-line/terminal window (Ctrl–Alt–T)
     
 Steps to Install Kubernetes on Ubuntu
+
 Set up Docker
 
 Step 1: Install Docker
@@ -30,9 +31,13 @@ If you do not have Kubernetes, install it by following these steps:
 sudo apt-get update
 
 2. Next, install Docker with the command:
+
 sudo apt-get install docker.io
+
 3. Repeat the process on each server that will act as a node.
+
 4. Check the installation (and version) by entering the following:
+
 docker ––version
 
 Step 2: Start and Enable Docker
@@ -50,26 +55,36 @@ To start Docker if it’s not running:
 sudo systemctl start docker
 
 3. Repeat on all the other nodes.
+
 =====================================================================================================================================================================
+
 Install Kubernetes
+
+Update the apt package index and install packages needed to use the Kubernetes apt repository:
+
+sudo apt-get update
+sudo apt-get install -y apt-transport-https ca-certificates curl
+
 Step 3: Add Kubernetes Signing Key
 
 Since you are downloading Kubernetes from a non-standard repository, it is essential to ensure that the software is authentic. This is done by adding a signing key.
 
 1. Enter the following to add a signing key:
+   Download the Google Cloud public signing key:
 
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
+(curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add)
 
-If you get an error that curl is not installed, install it with:
+sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 
-sudo apt-get install curl
 
 2. Then repeat the previous command to install the signing keys. Repeat for each server node.
 Step 4: Add Software Repositories
 
 Kubernetes is not included in the default repositories. To add them, enter the following:
 
-sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+(sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main")
+
+echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
 Repeat on each server node.
 Step 5: Kubernetes Installation Tools
@@ -77,10 +92,11 @@ Step 5: Kubernetes Installation Tools
 Kubeadm (Kubernetes Admin) is a tool that helps initialize a cluster. It fast-tracks setup by using community-sourced best practices. Kubelet is the work package, which runs on every node and starts containers. The tool gives you command-line access to clusters.
 
 1. Install Kubernetes tools with the command:
+Update apt package index, install kubelet, kubeadm and kubectl, and pin their version:
 
-sudo apt-get install kubeadm kubelet kubectl
-
-sudo apt-mark hold kubeadm kubelet kubectl
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
 
 Allow the process to complete.
 
@@ -106,6 +122,18 @@ sudo hostnamectl set-hostname master-node
 Next, set a worker node hostname by entering the following on the worker server:
 
 sudo hostnamectl set-hostname worker01
+
+Kubernetes Cgroup installation:
+
+https://kubernetes.io/docs/setup/production-environment/container-runtimes/
+What is Kubernetes Cgroup?
+Cgroups are the kernel feature that allows you to set limits for CPU, memory, and disk I/O for one or more processes. By using cgroups, you can isolate a process and the process's network. 
+You can also organize a group of processes or a single process into logical hierarchical groups.
+
+Warning:
+Matching the container runtime and kubelet cgroup drivers is required or otherwise the kubelet process will fail.
+
+Both the container runtime and the kubelet have a property called "cgroup driver", which is important for the management of cgroups on Linux machines.
 
 If you have additional worker nodes, use this process to set a unique hostname on each.
 Step 8: Initialize Kubernetes on Master Node
