@@ -1,0 +1,121 @@
+Install Kubernetes
+
+Update the apt package index and install packages needed to use the Kubernetes apt repository:
+
+sudo apt-get update
+sudo apt-get install -y apt-transport-https ca-certificates curl
+
+Step 3: Add Kubernetes Signing Key
+
+Since you are downloading Kubernetes from a non-standard repository, it is essential to ensure that the software is authentic. This is done by adding a signing key.
+
+1. Enter the following to add a signing key:
+   Download the Google Cloud public signing key:
+
+(curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add)
+
+sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+
+
+2. Then repeat the previous command to install the signing keys. Repeat for each server node.
+Step 4: Add Software Repositories
+
+Kubernetes is not included in the default repositories. To add them, enter the following:
+
+(sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main")
+
+echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+Repeat on each server node.
+Step 5: Kubernetes Installation Tools
+
+Kubeadm (Kubernetes Admin) is a tool that helps initialize a cluster. It fast-tracks setup by using community-sourced best practices. Kubelet is the work package, which runs on every node and starts containers. The tool gives you command-line access to clusters.
+
+1. Install Kubernetes tools with the command:
+Update apt package index, install kubelet, kubeadm and kubectl, and pin their version:
+
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
+
+Allow the process to complete.
+
+2. Verify the installation with:
+
+kubeadm version
+
+3. Repeat for each server node.
+
+Kubernetes Deployment
+Step 6: Begin Kubernetes Deployment
+
+Start by disabling the swap memory on each server:
+
+sudo swapoff –a
+
+Step 7: Assign Unique Hostname for Each Server Node 
+
+Decide which server to set as the master node. Then enter the command:
+
+sudo hostnamectl set-hostname master-node
+
+Next, set a worker node hostname by entering the following on the worker server:
+
+sudo hostnamectl set-hostname worker01
+
+Kubernetes Cgroup installation:
+
+https://kubernetes.io/docs/setup/production-environment/container-runtimes/
+What is Kubernetes Cgroup?
+Cgroups are the kernel feature that allows you to set limits for CPU, memory, and disk I/O for one or more processes. By using cgroups, you can isolate a process and the process's network. 
+You can also organize a group of processes or a single process into logical hierarchical groups.
+
+Warning:
+Matching the container runtime and kubelet cgroup drivers is required or otherwise the kubelet process will fail.
+
+Both the container runtime and the kubelet have a property called "cgroup driver", which is important for the management of cgroups on Linux machines.
+
+If you have additional worker nodes, use this process to set a unique hostname on each.
+Step 8: Initialize Kubernetes on Master Node
+
+Switch to the master server node, and enter the following:
+
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+
+Once this command finishes, it will display a kubeadm join message at the end. Make a note of the whole entry. This will be used to join the worker nodes to the cluster.
+
+Next, enter the following to create a directory for the cluster:
+
+kubernetes-master:~$ mkdir -p $HOME/.kube
+
+kubernetes-master:~$ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+
+kubernetes-master:~$ sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Step 9: Deploy Pod Network to Cluster
+
+A Pod Network is a way to allow communication between different nodes in the cluster. This tutorial uses the flannel virtual network.
+
+Enter the following:
+
+sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+Allow the process to complete.
+
+Verify that everything is running and communicating:
+
+kubectl get pods --all-namespaces
+
+Step 10: Join Worker Node to Cluster
+
+As indicated in Step 7, you can enter the kubeadm join command on each worker node to connect it to the cluster.
+
+Switch to the worker01 system and enter the command you noted from Step 7:
+
+kubeadm join --discovery-token abcdef.1234567890abcdef --discovery-token-ca-cert-hash sha256:1234..cdef 1.2.3.4:6443
+
+Replace the alphanumeric codes with those from your master server. Repeat for each worker node on the cluster. Wait a few minutes; then you can check the status of the nodes.
+
+Switch to the master server, and enter:
+
+kubectl get nodes
