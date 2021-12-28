@@ -1,0 +1,149 @@
+
+
+                                  Kubernetes Deployment
+
+Begin Kubernetes Deployment
+Start by disabling the swap memory on each server
+
+sudo swapoff –a
+
+vim /etc/fstab
+
+#/swap.img      none    swap    sw      0       0  (comment this line)
+
+
+Assign Unique Hostname for Each Server Node 
+
+Decide which server to set as the master node and worker nodes. Then enter the command:
+
+sudo hostnamectl set-hostname master-node
+sudo hostnamectl set-hostname worker-node01
+sudo hostnamectl set-hostname worker-node02
+
+cat /etc/hostname (check hostname reflected on hostname config fle)
+root@master-node:~# hostname   (hostname reflected globally)
+master-node
+
+If you have additional worker nodes, use this process to set a unique hostname on each.
+
+
+Kubernetes Cgroup installation:
+
+https://kubernetes.io/docs/setup/production-environment/container-runtimes/
+What is Kubernetes Cgroup?
+Cgroups are the kernel feature that allows you to set limits for CPU, memory, and disk I/O for one or more processes. By using cgroups, you can isolate a process and the process's network. 
+You can also organize a group of processes or a single process into logical hierarchical groups.
+
+Warning:
+Matching the container runtime and kubelet cgroup drivers is required or otherwise the kubelet process will fail.
+
+containerd
+
+This section contains the necessary steps to use containerd as CRI runtime.
+Use the following commands to install Containerd on your system:
+Install and configure prerequisites:
+
+cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
+overlay
+br_netfilter
+EOF
+
+sudo systemctl restart containerd
+
+
+Docker
+
+On each of your nodes, install the Docker for your Linux distribution as per Install Docker Engine. You can find the latest validated version of Docker in this dependencies file.
+
+Configure the Docker daemon, in particular to use systemd for the management of the container’s cgroups.
+
+cd  /etc/docker
+
+cat <<EOF | sudo tee /etc/docker/daemon.json
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+EOF
+
+
+Restart Docker and enable on boot:
+
+sudo systemctl enable docker
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+
+
+If you have additional worker nodes, use this process to set a unique hostname on each.
+
+Step 8: Initialize Kubernetes on Master Node
+Switch to the master server node, and enter the following:
+
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+
+output some thing mentioned below.
+==============================================================================================================
+
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 192.168.197.128:6443 --token j23sqr.i1g5dyy77d3ft8mt \
+        --discovery-token-ca-cert-hash sha256:360f4c99ed562c8c0ac7b4f3c000301ebbb83f06598d088e1037cc1dd3847804
+===================================================================================================================
+
+Once this command finishes, it will display a kubeadm join message at the end. Make a note of the whole entry. This will be used to join the worker nodes to the cluster.
+
+Next, enter the following to create a directory for the cluster:
+
+kubernetes-master:~$ mkdir -p $HOME/.kube
+
+kubernetes-master:~$ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+
+kubernetes-master:~$ sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Deploy Pod Network to Cluster
+
+A Pod Network is a way to allow communication between different nodes in the cluster. This tutorial uses the flannel virtual network.
+
+Enter the following:
+
+sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+Allow the process to complete.
+
+Verify that everything is running and communicating:
+
+kubectl get pods --all-namespaces
+
+Step 10: Join Worker Node to Cluster
+
+As indicated in Step 7, you can enter the kubeadm join command on each worker node to connect it to the cluster.
+
+Switch to the worker01 system and enter the command you noted from Step 7:
+
+kubeadm join --discovery-token abcdef.1234567890abcdef --discovery-token-ca-cert-hash sha256:1234..cdef 1.2.3.4:6443
+
+Replace the alphanumeric codes with those from your master server. Repeat for each worker node on the cluster. Wait a few minutes; then you can check the status of the nodes.
+
+Switch to the master server, and enter:
+
+kubectl get nodes
