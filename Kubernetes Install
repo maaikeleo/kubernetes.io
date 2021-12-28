@@ -67,6 +67,3 @@ Verify the installation with:
 kubeadm version
 
 Repeat for each server node.
-
-
-
