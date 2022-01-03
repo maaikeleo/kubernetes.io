@@ -7,7 +7,8 @@ https://www.vmware.com/in/products/workstation-pro/workstation-pro-evaluation.ht
 
 3. Download ubuntu-20.04.3-live-server-amd64
    i). go to mentoned below URL to download Ubuntu server.
-       http://ubuntu.mirror.snu.edu.in/ubuntu-releases/20.04/
+   
+       https://releases.ubuntu.com/20.04/
 
 a.Boot target system using bootable media (USB / DVD)
 
