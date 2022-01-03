@@ -1,1 +1,19 @@
 
+1. To install vmware workstation, go to mentoned below URL and download.
+
+https://www.vmware.com/in/products/workstation-pro/workstation-pro-evaluation.html
+
+2. Install vmware workstation
+
+3. Download ubuntu-20.04.3-live-server-amd64
+   i). go to mentoned below URL to download Ubuntu server.
+       http://ubuntu.mirror.snu.edu.in/ubuntu-releases/20.04/
+
+a.Boot target system using bootable media (USB / DVD)
+
+b.Choose Keyboard layout and then press enter
+
+c.Configure network and Ubuntu Archive Mirror
+
+d.Configure Storage Layout for Ubuntu 20.04 LTS Server
+
