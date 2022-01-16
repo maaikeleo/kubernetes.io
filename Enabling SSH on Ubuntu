@@ -1,0 +1,11 @@
+sudo apt update
+sudo apt install openssh-server
+sudo systemctl status ssh
+sudo ufw allow ssh
+netstat -tulpn | grep 22^
+To connect to your Ubuntu machine over LAN invoke the ssh command followed by the username and the IP address in the following format:
+
+ssh username@ip_address
+
+sudo systemctl disable --now ssh
+sudo systemctl enable --now ssh
